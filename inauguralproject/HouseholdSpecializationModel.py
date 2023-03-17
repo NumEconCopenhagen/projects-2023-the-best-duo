@@ -17,22 +17,22 @@ class HouseholdSpecializationModelClass:
         sol = self.sol = SimpleNamespace()
 
         # b. preferences
-        par.rho = 2.0
-        par.nu = 0.001
-        par.epsilon = 1.0
-        par.omega = 0.5 
+        par.rho = 2.0        #//p
+        par.nu = 0.001       #//v
+        par.epsilon = 1.0    #//e
+        par.omega = 0.5      #//w
 
         # c. household production
-        par.alpha = 0.5
-        par.sigma = 1.0
+        par.alpha = 0.5      #//a
+        par.sigma = 1.0      #//o
 
         # d. wages
         par.wM = 1.0
         par.wF = 1.0
-        par.wF_vec = np.linspace(0.8,1.2,5)
+        par.wF_vec = np.linspace(0.8,1.2,5) #//setup for 2 and 3
 
         # e. targets
-        par.beta0_target = 0.4
+        par.beta0_target = 0.4      
         par.beta1_target = -0.1
 
         # f. solution
@@ -54,13 +54,13 @@ class HouseholdSpecializationModelClass:
         C = par.wM*LM + par.wF*LF
 
         # b. home production
-        H = HM**(1-par.alpha)*HF**par.alpha
+        H = HM**(1-par.alpha)*HF**par.alpha    #//this is home production when sigma (o) = 1
 
         # c. total consumption utility
         Q = C**par.omega*H**(1-par.omega)
-        utility = np.fmax(Q,1e-8)**(1-par.rho)/(1-par.rho)
+        utility = np.fmax(Q,1e-8)**(1-par.rho)/(1-par.rho)   #//this puts a lower bound on Q such that it never is 0
 
-        # d. disutlity of work
+        # d. disutility of work
         epsilon_ = 1+1/par.epsilon
         TM = LM+HM
         TF = LF+HF
@@ -101,7 +101,7 @@ class HouseholdSpecializationModelClass:
 
         # e. print
         if do_print:
-            for k,v in opt.__dict__.items():
+            for k,v in opt.__dict__.items():   #//With all the optimal variables, it will turn into a dictionary and print "variable = number"
                 print(f'{k} = {v:6.4f}')
 
         return opt
