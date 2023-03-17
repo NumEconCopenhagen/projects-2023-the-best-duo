@@ -1,9 +1,8 @@
-# \[Group name\]
+# \[The Best Duo\]
 
 **Group members:**
-- A
-- B
-- C
+- Marie-Floriane Durand
+- Luís Gonçalves
 
 This repository contains  
 1. Inaugural project. 
