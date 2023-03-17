@@ -80,7 +80,6 @@ class HouseholdSpecializationModelClass:
         """ solve model discretely """
         
         par = self.par
-        sol = self.sol
         opt = SimpleNamespace()
         
         # a. all possible choices
@@ -149,8 +148,32 @@ class HouseholdSpecializationModelClass:
 
     def solve_wF_vec(self,discrete=False):
         """ solve model for vector of female wages """
+        
+        par = self.par
+        sol = self.sol
 
-        pass
+        # a. solve for all wF values
+        if discrete == False:
+            for i, wF in enumerate(par.wF_vec):
+                par.wF = wF
+                
+                opt = self.solve()
+                sol.LM_vec[i] = opt.LM
+                sol.HM_vec[i] = opt.HM
+                sol.LF_vec[i] = opt.LF
+                sol.HF_vec[i] = opt.HF
+        
+        if discrete == False:
+            for i, wF in enumerate(par.wF_vec):
+                par.wF = wF
+                
+                opt = self.solve()
+                sol.LM_vec[i] = opt.LM
+                sol.HM_vec[i] = opt.HM
+                sol.LF_vec[i] = opt.LF
+                sol.HF_vec[i] = opt.HF
+        
+        return
 
     def run_regression(self):
         """ run regression """
