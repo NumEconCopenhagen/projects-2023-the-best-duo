@@ -106,6 +106,7 @@ class HouseholdSpecializationModelClass:
         opt.HM = HM[j]
         opt.LF = LF[j]
         opt.HF = HF[j]
+        opt.u = self.calc_utility(opt.LM, opt.HM, opt.LF, opt.HF)
 
         # e. print
         if do_print:
@@ -116,8 +117,35 @@ class HouseholdSpecializationModelClass:
 
     def solve(self,do_print=False):
         """ solve model continously """
+        
+        par = self.par
+        sol = self.sol
+        opt = SimpleNamespace()
 
-        pass    
+         # a. objective function (to minimize) 
+        def objective_function(x):                               #//x will contain all possible LM,HM,LF,HF
+            return -self.calc_utility(x[0], x[1], x[2], x[3]) 
+        
+        # b. constraints
+        cons1 = lambda x: 24 - x[0] - x[1]    #//time spent by male cant be above 24
+        cons2 = lambda x: 24 - x[2] - x[3]    #//time spent by female cant be above 24
+        constraints = ({'type': 'ineq', 'fun': cons1},
+                       {'type': 'ineq', 'fun': cons2})
+        bounds = ((0,24), (0,24), (0,24), (0,24))
+        
+        # c. call solver
+        initial_guess = [12, 12, 12, 12]
+        sol = optimize.minimize(objective_function,initial_guess,
+                                method='SLSQP',bounds=bounds,constraints=constraints)
+        
+        # d. save
+        opt.LM = sol.x[0]
+        opt.HM = sol.x[1]
+        opt.LF = sol.x[2]
+        opt.HF = sol.x[3]
+        opt.u = self.calc_utility(opt.LM,opt.HM,opt.LF,opt.HF)
+
+        return opt   
 
     def solve_wF_vec(self,discrete=False):
         """ solve model for vector of female wages """
