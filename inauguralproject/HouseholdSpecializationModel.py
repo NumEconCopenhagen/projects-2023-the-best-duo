@@ -64,8 +64,6 @@ class HouseholdSpecializationModelClass:
             H = ((1-par.alpha)*HM**((par.sigma-1)/par.sigma)
                  + par.alpha*HF**((par.sigma-1)/par.sigma)) ** (par.sigma/(par.sigma-1))
 
-        print(H) #testing purposes
-
         # c. total consumption utility
         Q = C**par.omega*H**(1-par.omega)
         utility = np.fmax(Q,1e-8)**(1-par.rho)/(1-par.rho)   #//this puts a lower bound on Q such that it never is 0
