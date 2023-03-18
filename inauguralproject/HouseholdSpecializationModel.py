@@ -169,13 +169,13 @@ class HouseholdSpecializationModelClass:
             for i, wF in enumerate(par.wF_vec):
                 par.wF = wF
                 
-                opt = self.solve()
+                opt = self.solve_discrete()
                 sol.LM_vec[i] = opt.LM
                 sol.HM_vec[i] = opt.HM
                 sol.LF_vec[i] = opt.LF
                 sol.HF_vec[i] = opt.HF
         
-        return 
+        return sol
 
          
 
