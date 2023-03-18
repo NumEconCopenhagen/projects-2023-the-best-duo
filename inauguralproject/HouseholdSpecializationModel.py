@@ -132,6 +132,7 @@ class HouseholdSpecializationModelClass:
                        {'type': 'ineq', 'fun': cons2})
         bounds = ((0,24), (0,24), (0,24), (0,24))
         
+
         # c. call solver
         initial_guess = [12, 12, 12, 12]
         sol = optimize.minimize(objective_function,initial_guess,
@@ -143,7 +144,7 @@ class HouseholdSpecializationModelClass:
         opt.LF = sol.x[2]
         opt.HF = sol.x[3]
         opt.u = self.calc_utility(opt.LM,opt.HM,opt.LF,opt.HF)
-
+        
         return opt   
 
     def solve_wF_vec(self,discrete=False):
@@ -151,6 +152,7 @@ class HouseholdSpecializationModelClass:
         
         par = self.par
         sol = self.sol
+        opt = SimpleNamespace()
 
         # a. solve for all wF values
         if discrete == False:
@@ -163,7 +165,7 @@ class HouseholdSpecializationModelClass:
                 sol.LF_vec[i] = opt.LF
                 sol.HF_vec[i] = opt.HF
         
-        if discrete == False:
+        if discrete == True:
             for i, wF in enumerate(par.wF_vec):
                 par.wF = wF
                 
@@ -173,7 +175,9 @@ class HouseholdSpecializationModelClass:
                 sol.LF_vec[i] = opt.LF
                 sol.HF_vec[i] = opt.HF
         
-        return
+        return 
+
+         
 
     def run_regression(self):
         """ run regression """
