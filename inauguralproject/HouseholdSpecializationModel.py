@@ -155,21 +155,21 @@ class HouseholdSpecializationModelClass:
         opt = SimpleNamespace()
 
         # a. solve for all wF values
-        if discrete == False:
+        if discrete:
             for i, wF in enumerate(par.wF_vec):
                 par.wF = wF
                 
-                opt = self.solve()
+                opt = self.solve_discrete()
                 sol.LM_vec[i] = opt.LM
                 sol.HM_vec[i] = opt.HM
                 sol.LF_vec[i] = opt.LF
                 sol.HF_vec[i] = opt.HF
         
-        if discrete == True:
+        else:
             for i, wF in enumerate(par.wF_vec):
                 par.wF = wF
                 
-                opt = self.solve_discrete()
+                opt = self.solve()
                 sol.LM_vec[i] = opt.LM
                 sol.HM_vec[i] = opt.HM
                 sol.LF_vec[i] = opt.LF
@@ -192,5 +192,36 @@ class HouseholdSpecializationModelClass:
     
     def estimate(self,alpha=None,sigma=None):
         """ estimate alpha and sigma """
+        
+        par = self.par
+        sol = self.sol
+        obs_beta0 = 0.4
+        obs_beta1 = -0.1
+        best_error = np.inf
+        best_alpha = np.nan
+        best_sigma = np.nan
 
-        pass
+        #// I'm thinking of doing a grid search
+        alp_vec = np.linspace(0.2,2,10)
+        sig_vec = np.linspace(0.2,2,10)
+
+        for alp in alp_vec:
+            par.alpha = alp
+            
+            for sig in sig_vec:
+                par.sigma = sig
+                self.solve_wF_vec()
+                self.run_regression()
+                error = (obs_beta0 - sol.beta0)**2 + (obs_beta1 - sol.beta1)**2
+
+                if error < best_error:
+                    best_error = error
+                    best_alpha = alp
+                    best_sigma = sig
+                
+                
+        
+        print(f'the best anwser is alpha = {best_alpha}. sigma = {best_sigma}, with error = {best_error})
+
+                    
+        
