@@ -193,7 +193,7 @@ class HouseholdSpecializationModelClass:
         A = np.vstack([np.ones(x.size),x]).T
         sol.beta0,sol.beta1 = np.linalg.lstsq(A,y,rcond=None)[0]
     
-    def estimate(self,alpha=None,sigma=None):
+    def estimate(self,alpha=None,min_alpha=0,max_alpha=2,sigma=None,min_sigma=0,max_sigma=2,wM=None,min_wM=1,max_wM=3):
         """ estimate alpha and sigma """
         
         par = self.par
@@ -201,31 +201,50 @@ class HouseholdSpecializationModelClass:
         best_error = np.inf
         best_alpha = np.nan
         best_sigma = np.nan
+        best_wM = np.nan
 
         #// I'm thinking of doing a grid search
-        alp_vec = np.linspace(0.953,1.003,15)
-        sig_vec = np.linspace(0.08,0.13,15)
+        if alpha == None:
+            alp_vec = np.linspace(min_alpha,max_alpha,15)
+        else:
+            alp_vec = [alpha]
+
+        if sigma == None:
+            sig_vec = np.linspace(min_sigma,max_sigma,15)
+        else:
+            sig_vec = [sigma]
+
+        if wM == None:
+            wM_vec = np.linspace(min_wM,max_wM,15)
+        else:
+            wM_vec = [wM]
 
         for alp in alp_vec:
             par.alpha = alp
             
             for sig in sig_vec:
                 par.sigma = sig
-                self.solve_wF_vec()
-                self.run_regression()
-                error = (par.beta0_target - sol.beta0)**2 + (par.beta1_target - sol.beta1)**2
 
-                if error < best_error:
-                    best_error = error
-                    best_alpha = alp
-                    best_sigma = sig
+                for wM in wM_vec:
+                    par.wM = wM
+                    
+                    self.solve_wF_vec()
+                    self.run_regression()
+                    error = (par.beta0_target - sol.beta0)**2 + (par.beta1_target - sol.beta1)**2
+
+                    if error < best_error:
+                        best_error = error
+                        best_alpha = alp
+                        best_sigma = sig
+                        best_wM = wM
         
-        print(f'the best anwser is alpha = {best_alpha}. sigma = {best_sigma}, with error = {best_error}')
+        print(f'the best anwser is alpha = {best_alpha}. sigma = {best_sigma}, wM = {best_wM} with error = {best_error}')
 
-        return best_alpha,best_sigma
+        return best_alpha,best_sigma,best_wM
         #parameter reset
         par.alpha = 0.5
         par.sigma = 1
+        par.wM = 1
 
                     
         
