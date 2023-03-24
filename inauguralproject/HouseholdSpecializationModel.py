@@ -174,6 +174,10 @@ class HouseholdSpecializationModelClass:
                 sol.HM_vec[i] = opt.HM
                 sol.LF_vec[i] = opt.LF
                 sol.HF_vec[i] = opt.HF
+
+        #parameter reset
+        par.wF = 1
+        
         
         return sol
 
@@ -220,6 +224,10 @@ class HouseholdSpecializationModelClass:
                     best_sigma = sig
         
         print(f'the best anwser is alpha = {best_alpha}. sigma = {best_sigma}, with error = {best_error}')
+
+        #parameter reset
+        par.alpha = 0.5
+        par.sigma = 1
 
                     
         
