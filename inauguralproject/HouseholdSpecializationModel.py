@@ -61,8 +61,7 @@ class HouseholdSpecializationModelClass:
             H = HM**(1-par.alpha) * HF**par.alpha
         
         else:
-            H = ((1-par.alpha)*HM**((par.sigma-1)/par.sigma)
-                 + par.alpha*HF**((par.sigma-1)/par.sigma)) ** (par.sigma/(par.sigma-1))
+            H = ((1-par.alpha)*HM**((par.sigma-1)/par.sigma) + par.alpha*HF**((par.sigma-1)/par.sigma)) ** (par.sigma/(par.sigma-1))
 
         # c. total consumption utility
         Q = C**par.omega*H**(1-par.omega)
@@ -177,7 +176,7 @@ class HouseholdSpecializationModelClass:
 
         #parameter reset
         par.wF = 1
-        
+
         
         return sol
 
@@ -199,15 +198,13 @@ class HouseholdSpecializationModelClass:
         
         par = self.par
         sol = self.sol
-        obs_beta0 = 0.4
-        obs_beta1 = -0.1
         best_error = np.inf
         best_alpha = np.nan
         best_sigma = np.nan
 
         #// I'm thinking of doing a grid search
-        alp_vec = np.linspace(0.2,2,10)
-        sig_vec = np.linspace(0.2,2,10)
+        alp_vec = np.linspace(0,2,10)
+        sig_vec = np.linspace(0,2,10)
 
         for alp in alp_vec:
             par.alpha = alp
@@ -216,7 +213,7 @@ class HouseholdSpecializationModelClass:
                 par.sigma = sig
                 self.solve_wF_vec()
                 self.run_regression()
-                error = (obs_beta0 - sol.beta0)**2 + (obs_beta1 - sol.beta1)**2
+                error = (par.beta0_target - sol.beta0)**2 + (par.beta1_target - sol.beta1)**2
 
                 if error < best_error:
                     best_error = error
@@ -225,6 +222,7 @@ class HouseholdSpecializationModelClass:
         
         print(f'the best anwser is alpha = {best_alpha}. sigma = {best_sigma}, with error = {best_error}')
 
+        return best_alpha,best_sigma
         #parameter reset
         par.alpha = 0.5
         par.sigma = 1
