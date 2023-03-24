@@ -218,7 +218,6 @@ class HouseholdSpecializationModelClass:
                     best_error = error
                     best_alpha = alp
                     best_sigma = sig
-
         
         print(f'the best anwser is alpha = {best_alpha}. sigma = {best_sigma}, with error = {best_error}')
 
