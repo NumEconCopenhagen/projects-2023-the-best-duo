@@ -203,8 +203,8 @@ class HouseholdSpecializationModelClass:
         best_sigma = np.nan
 
         #// I'm thinking of doing a grid search
-        alp_vec = np.linspace(0,2,10)
-        sig_vec = np.linspace(0,2,10)
+        alp_vec = np.linspace(0.953,1.003,15)
+        sig_vec = np.linspace(0.08,0.13,15)
 
         for alp in alp_vec:
             par.alpha = alp
