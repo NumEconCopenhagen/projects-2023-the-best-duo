@@ -17,19 +17,19 @@ class HouseholdSpecializationModelClass:
         sol = self.sol = SimpleNamespace()
 
         # b. preferences
-        par.rho = 2.0        #//p
-        par.nu = 0.001       #//v
-        par.epsilon = 1.0    #//e
-        par.omega = 0.5      #//w
+        par.rho = 2.0
+        par.nu = 0.001
+        par.epsilon = 1.0
+        par.omega = 0.5
 
         # c. household production
-        par.alpha = 0.5      #//a
-        par.sigma = 1.0      #//o
+        par.alpha = 0.5
+        par.sigma = 1.0
 
         # d. wages
         par.wM = 1.0
         par.wF = 1.0
-        par.wF_vec = np.linspace(0.8,1.2,5) #//setup for 2 and 3
+        par.wF_vec = np.linspace(0.8,1.2,5)
 
         # e. targets
         par.beta0_target = 0.4      
@@ -65,7 +65,7 @@ class HouseholdSpecializationModelClass:
 
         # c. total consumption utility
         Q = C**par.omega*H**(1-par.omega)
-        utility = np.fmax(Q,1e-8)**(1-par.rho)/(1-par.rho)   #//this puts a lower bound on Q such that it never is 0
+        utility = np.fmax(Q,1e-8)**(1-par.rho)/(1-par.rho)
 
         # d. disutility of work
         epsilon_ = 1+1/par.epsilon
@@ -108,7 +108,7 @@ class HouseholdSpecializationModelClass:
 
         # e. print
         if do_print:
-            for k,v in opt.__dict__.items():   #//With all the optimal variables, it will turn into a dictionary and print "variable = number"
+            for k,v in opt.__dict__.items():
                 print(f'{k} = {v:6.4f}')
 
         return opt
@@ -121,12 +121,12 @@ class HouseholdSpecializationModelClass:
         opt = SimpleNamespace()
 
          # a. objective function (to minimize) 
-        def objective_function(x):                               #//x will contain all possible LM,HM,LF,HF
+        def objective_function(x):
             return -self.calc_utility(x[0], x[1], x[2], x[3]) 
         
         # b. constraints
-        cons1 = lambda x: 24 - x[0] - x[1]    #//time spent by male cant be above 24
-        cons2 = lambda x: 24 - x[2] - x[3]    #//time spent by female cant be above 24
+        cons1 = lambda x: 24 - x[0] - x[1]    #time spent by male can't be above 24
+        cons2 = lambda x: 24 - x[2] - x[3]    #time spent by female can't be above 24
         constraints = ({'type': 'ineq', 'fun': cons1},
                        {'type': 'ineq', 'fun': cons2})
         bounds = ((0,24), (0,24), (0,24), (0,24))
@@ -155,6 +155,8 @@ class HouseholdSpecializationModelClass:
 
         # a. solve for all wF values
         if discrete:
+
+            # i. solve when discrete
             for i, wF in enumerate(par.wF_vec):
                 par.wF = wF
                 
@@ -165,6 +167,8 @@ class HouseholdSpecializationModelClass:
                 sol.HF_vec[i] = opt.HF
         
         else:
+
+            # ii. solve when continuous
             for i, wF in enumerate(par.wF_vec):
                 par.wF = wF
                 
@@ -174,43 +178,42 @@ class HouseholdSpecializationModelClass:
                 sol.LF_vec[i] = opt.LF
                 sol.HF_vec[i] = opt.HF
 
-        #parameter reset
+        # b. parameter reset
         par.wF = 1
-
         
-        return sol
-
-         
+        return sol   
 
     def run_regression(self):
         """ run regression """
 
         par = self.par
         sol = self.sol
-
-        x = np.log(par.wF_vec)
-        y = np.log(sol.HF_vec/sol.HM_vec)
+    
+        x = np.log10(par.wF_vec/par.wM)
+        y = np.log10(sol.HF_vec/sol.HM_vec)
         A = np.vstack([np.ones(x.size),x]).T
         sol.beta0,sol.beta1 = np.linalg.lstsq(A,y,rcond=None)[0]
     
-    def estimate(self,alpha=None,min_alpha=0,max_alpha=2,sigma=None,min_sigma=0,max_sigma=2,wM=None,min_wM=1,max_wM=3):
-        """ estimate alpha and sigma """
+    def estimate(self,alpha=None,min_alpha=0,max_alpha=2,sigma=None,min_sigma=0,max_sigma=2,wM=None,min_wM=1,max_wM=3,n=15):
+        """ estimate the best alpha, sigma and wM to better fit the reality, with vectors of size n """
         
         par = self.par
         sol = self.sol
+
+        # a. setting paramenters
         best_error = np.inf
         best_alpha = np.nan
         best_sigma = np.nan
         best_wM = np.nan
 
-        #// I'm thinking of doing a grid search
+        # b. assigns fixed and variable parameters
         if alpha == None:
-            alp_vec = np.linspace(min_alpha,max_alpha,15)
+            alp_vec = np.linspace(min_alpha,max_alpha,n) #alpha is variable if no value is atributted
         else:
-            alp_vec = [alpha]
+            alp_vec = [alpha]                             #alpha is fixed if value is atributted
 
         if sigma == None:
-            sig_vec = np.linspace(min_sigma,max_sigma,15)
+            sig_vec = np.linspace(min_sigma,max_sigma,n)
         else:
             sig_vec = [sigma]
 
@@ -219,32 +222,52 @@ class HouseholdSpecializationModelClass:
         else:
             wM_vec = [wM]
 
+        # c. grid search
         for alp in alp_vec:
             par.alpha = alp
             
             for sig in sig_vec:
                 par.sigma = sig
 
-                for wM in wM_vec:
-                    par.wM = wM
+                for wm in wM_vec:
+                    par.wM = wm
                     
+                    # i. solve
                     self.solve_wF_vec()
                     self.run_regression()
+
+                    # ii. calculate error
                     error = (par.beta0_target - sol.beta0)**2 + (par.beta1_target - sol.beta1)**2
 
+                    # iii. filter best error
                     if error < best_error:
                         best_error = error
                         best_alpha = alp
                         best_sigma = sig
-                        best_wM = wM
+                        best_wM = wm
         
-        print(f'the best anwser is alpha = {best_alpha}. sigma = {best_sigma}, wM = {best_wM} with error = {best_error}')
+        # d. print results
+        result = "The best answer is:"
 
-        return best_alpha,best_sigma,best_wM
-        #parameter reset
+        if alpha == None:
+            result += f" alpha = {best_alpha},"
+        if sigma == None:
+            result += f" sigma = {best_sigma},"
+        if wM == None:
+            result += f" wM = {best_wM},"
+        
+        result += f" with error = {best_error}."
+
+        print(result)
+        
+        # e. parameter reset
         par.alpha = 0.5
         par.sigma = 1
         par.wM = 1
+
+        return best_alpha,best_sigma,best_wM
+        
+        
 
                     
         
