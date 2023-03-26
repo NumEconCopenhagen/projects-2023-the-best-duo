@@ -15,14 +15,14 @@ def loop_alpha_sigma(alpha_vec,sigma_vec):
             model.par.alpha = alpha_vec[alp_i]
             model.par.sigma = sigma_vec[sig_i]
             
-            # c. solve
+            # i. solve
             opt = model.solve_discrete()
 
-            # d. filter out whenever HM is 0 (ratio would be infinite)
+            # ii. filter out whenever HM is 0 (ratio would be infinite)
             if opt.HM == 0:
                 ratio = np.inf
             else:
                 ratio = opt.HF / opt.HM
             
-            # e. print out results
+            # iii. print out results
             print(f'(\u03B1, \u03C3) : ({alpha_vec[alp_i]:.2f}, {sigma_vec[sig_i]:.2F}) --> ratio ={ratio: .4F}')
