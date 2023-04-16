@@ -1,8 +1,9 @@
 # Data analysis project
 
-Our project is titled **...** and is about to explain the relation between net migration and gdp, employment ratio, labor force and wage in two countries, the Unites States and Romania
+Our project is titled **Study case: The affect of net migration on the US and Romania** and it is about to explain the relation between net migration and gdp, employment ratio, labor force and wage in two countries, the Unites States and Romania.
 
 The **results** of the project can be seen from running [dataproject.ipynb](dataproject.ipynb).
+We also used the .py-file *plot_function* to plot the dataframes.
 
 We apply the **following datasets**:
 
