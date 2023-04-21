@@ -1,6 +1,7 @@
 import ipywidgets as widgets
 import matplotlib.pyplot as plt
 import pandas as pd
+import numpy as np
 
 def plot_func(df, country, data):
     """Will plot the dataframe on a normal plot"""
