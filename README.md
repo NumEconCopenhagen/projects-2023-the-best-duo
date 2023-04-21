@@ -6,5 +6,5 @@
 
 This repository contains  
 1. Inaugural project. 
-2. Data project. We fetch data from **source x** on **y** and show that ...
+2. Data project. We fetch data from **World Bank data** on **net migration** and show that there is no significant correlation between migration and other specified variables.
 3. Model project. We model ...
