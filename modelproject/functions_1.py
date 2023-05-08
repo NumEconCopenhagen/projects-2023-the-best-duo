@@ -1,26 +1,27 @@
 import numpy as np
 
-def trade(agent,firm,do_print=False):
-    max_p = agent.max_p
-    min_p = firm.min_p
+def trade(buyer,seller,n_sellers,tol=1,do_print=False):
+    max_p = buyer.max_p
+    min_p = seller.min_p
+    p_buyer = buyer.curr_p
+    p_seller = seller.curr_p
     p = np.nan
+    success = False
 
     # a. successful trade
-    if max_p >= min_p:
-        p = (max_p + min_p)//2
-        agent.cash -= p
-        firm.cash += p
+    if p_seller <= p_buyer and not seller.sold and not buyer.bought:
+        p = p_seller
+        buyer.curr_surplus = max_p - p_seller
+        seller.curr_surplus = min_p - p_seller
 
         #i. price adjustments (agent decreases and firm increases)
-        agent.max_p += (p - max_p)//2 
-        firm.min_p += (p - min_p)//2
-        
-    # b. failed trade
-    else:
-
-        # i. price adjustments (agent increases and firm decreases)
-        agent.max_p += (min_p - max_p)//2 + 1 #without this, the costumer will never go above the min_p (int rounds the value down)
-        firm.min_p += (max_p - min_p)//2
+        buyer.curr_p -= 1
+        seller.curr_p += 1
+        buyer.sold = True
+        seller.bought = True
+    
+    elif not buyer.bought:
+        buyer.curr_p = min(p_buyer + tol/(n_sellers-1), max_p)
     
     if do_print:
         if p is np.nan:

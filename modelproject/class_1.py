@@ -1,67 +1,88 @@
 from types import SimpleNamespace
 import random as rand
-from part_1.functions_1 import trade
+from functions_1 import trade
 import numpy as np
 import matplotlib.pyplot as plt
+import itertools
 
-class agent:
-    def __init__(self, id, max_p, cash):
+class buyer:
+    def __init__(self, id, max_p, curr_d_p):
         self.id = id
         self.max_p = max_p
-        self.cash = cash
+        self.curr_p = curr_d_p
+        self.curr_surplus = 0
+        self.bought = False
 
-class firm:
-    def __init__(self, id, min_p, cash):
+class seller:
+    def __init__(self, id, min_p, curr_s_p):
         self.id = id
         self.min_p = min_p
-        self.cash = cash
+        self.curr_p = curr_s_p
+        self.curr_surplus = 0
+        self.sold = False
 
 class economy_simulation:
 
-    def __init__(self, n_sim=100, n_days=30, n_actions=1, n_agents=25, n_firms=25):
-    
+    def __init__(self, dem_func, sup_func, initial_p, dem_dom=[0,1], sup_dom=[0,1], n_days=30, n_buyers=25, n_sellers=25, ):
+        """Creates an economy simulation
+        
+        Parameters:
+        dem_func: demand function of the economy
+        sup_func: supply function of the economy
+        dem_dom: [left_bound, right_bound] it's the domain of the demand function
+        sup_dom: [left_bound, right_bound] it's the domain of the supply function
+        
+        """
+
+
         par = self.par = SimpleNamespace()
         
         # a. functional parameters
-        par.n_sim = n_sim
         par.n_days = n_days
-        par.n_actions = n_actions
-        par.n_agents = n_agents
-        par.n_firms = n_firms
+        par.n_buyers = n_buyers
+        par.n_sellers = n_sellers
+        par.dem_func = dem_func
+        par.sup_func = sup_func
+        par.dem_dom = dem_dom
+        par.sup_dom = sup_dom
+        par.initial_p = initial_p
     
     def simulate(self):
 
         # a. setup
         par = self.par
-        all_p = np.zeros((par.n_sim,par.n_days))
-        average_p = []
+        
 
         # b. simulations
-        for sim in range(par.n_sim):
-            agents = [agent(i,rand.randint(1,10),100) for i in range(par.n_agents)]
-            firms = [firm(i,rand.randint(1,10),100) for i in range(par.n_firms)]
-            agents = agents * par.n_actions
-            
-            for day in range(par.n_days):
-                rand.shuffle(agents)
-                day_p_val = []
-            
-                # i. Simulate each turn
-                for agent_turn in agents:
-                    chosen_firm = rand.choice(firms)
-                    p = trade(agent_turn, chosen_firm)
-                    day_p_val.append(p)
-            
-                all_p[sim,day] = np.nanmean(day_p_val)
-            
-            # ii. plot each simulation        
-            plt.plot(all_p[sim], alpha=0.07,color="black")
-                
-        # c. calculate and plot average prices
+        buyers = [buyer(i,par.dem_func(i),par.initial_p) for i in np.linspace(par.dem_dom[0],par.dem_dom[1], par.n_buyers)]
+        sellers = [seller(i,par.sup_func(i),par.initial_p) for i in np.linspace(par.sup_dom[0],par.sup_dom[1], par.n_sellers)]
+        poss_comb = list(itertools.product(buyers,sellers))
+        for i, comb in enumerate(poss_comb):
+            poss_comb[i] = list(comb)
+
+        iter = 0
+
         for day in range(par.n_days):
-            average_p.append(np.nanmean(all_p[:,day]))    
+            rand.shuffle(poss_comb)
 
-        plt.plot(average_p, alpha=0.7,color="red")
+            print("New day")
+            print(poss_comb)
+            for chosen_pair in poss_comb:
+                
+                # were choosing one interaction
+                chosen_buyer, chosen_seller = chosen_pair
+                
+                p = trade(chosen_buyer,chosen_seller,par.n_sellers)
 
-        # d. print ending average price
-        print(f"The average ending price is: {average_p[-1]}")
+                print(p)
+                
+                
+            
+            # reset
+            for i in len(poss_comb):
+                poss_comb[i][0].bought = False
+                poss_comb[i][1].sold = False
+
+            
+        
+                    
