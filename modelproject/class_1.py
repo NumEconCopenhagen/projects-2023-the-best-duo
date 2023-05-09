@@ -6,24 +6,40 @@ import matplotlib.pyplot as plt
 import itertools
 
 class buyer:
-    def __init__(self, id, max_p, curr_d_p):
+    def __init__(self, id, max_p, curr_d_p, min_rw, curr_s_w):
         # identification
         self.id = id
 
-        
+        # good market
         self.max_p = max_p
         self.curr_p = curr_d_p
-        self.curr_surplus = 0
+        self.p_curr_surplus = 0
         self.bought = False
+
+        # labor market
+        self.min_rw = min_rw
+        self.curr_w = curr_s_w
+        self.rw_curr_surplus = 0
+        self.worked = False
+
 
 
 class seller:
-    def __init__(self, id, min_p, curr_s_p):
+    def __init__(self, id, min_p, curr_s_p, max_rw, curr_d_w):
+        # identification
         self.id = id
+
+        # good market
         self.min_p = min_p
         self.curr_p = curr_s_p
-        self.curr_surplus = 0
+        self.p_curr_surplus = 0
         self.sold = False
+
+        # labor market
+        self.max_rw = max_rw
+        self.curr_w = curr_d_w
+        self.rw_curr_surplus = 0
+        self.employed = False
 
 class economy_simulation:
 
