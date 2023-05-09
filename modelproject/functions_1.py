@@ -13,7 +13,7 @@ def trade(buyer,seller,n_sellers,tol=1,do_print=False):
     if p_seller <= p_buyer and not seller.sold and not buyer.bought:
         p = p_seller
         buyer.p_curr_surplus = max_p - p_seller
-        seller.p_curr_surplus = p_seller- min_p
+        seller.p_curr_surplus = p_seller - min_p
 
         #i. price adjustments (agent decreases and firm increases)
         buyer.curr_p -= 1
@@ -28,24 +28,23 @@ def trade(buyer,seller,n_sellers,tol=1,do_print=False):
         if p is not np.nan:
             # print('The trade has failed ;-;')
             print(f'The trade was successful, for a price of {p}')
-        
+    
     return p
 
-def labor_market(worker,employer,n_employers,tol=1,do_print=False):
+
+def labor_market(worker,employer,n_employers,inflation,tol=1,do_print=False):
     max_rw = employer.max_rw
     min_rw = worker.min_rw
-    consumer_inflation = worker.curr_p
-    producer_inflation = employer.curr_p
-    w_worker = max(worker.curr_w, int(min_rw*consumer_inflation)+1)
+    w_worker = max(worker.curr_w, int(min_rw*inflation)+1)
     worker.curr_w = w_worker
-    w_employer = min(employer.curr_w, int(max_rw*producer_inflation))
+    w_employer = min(employer.curr_w, int(max_rw*inflation))
     employer.curr_w = w_employer
     w = np.nan
 
     if  w_worker <= w_employer and not employer.employed and not worker.worked:
         w = w_employer
-        worker.rw_curr_surplus = w - min_rw*consumer_inflation
-        employer.rw_curr_surplus = max_rw*producer_inflation - w
+        worker.rw_curr_surplus = w - min_rw*inflation
+        employer.rw_curr_surplus = max_rw*inflation - w
 
         #i. wage adjustments (agent increases and firm decreases)
         employer.curr_w -= 1
@@ -53,10 +52,14 @@ def labor_market(worker,employer,n_employers,tol=1,do_print=False):
         employer.employed = True
         worker.worked = True
 
+
+
     elif not worker.worked:
-        worker.curr_w = max(w_worker - tol/(n_employers-1), min_rw*consumer_inflation)
+        worker.curr_w = max(w_worker - tol/(n_employers-1), min_rw*inflation)
 
     if do_print:
         if w is not np.nan:
             # print('The trade has failed ;-;')
-            print(f'The trade was successful {employer.id}, for a wage of {w} (real wage: {w/consumer_inflation})')
+            print(f'The trade was successful {employer.id}, for a wage of {w} (real wage: {w/inflation})')
+
+    return w
