@@ -3,8 +3,6 @@ import numpy as np
 def trade(buyer,seller,constrained=False,do_print=False):
     max_p = buyer.max_p
     min_p = seller.min_p
-    if constrained:
-        buyer.curr_p *= buyer.hunger_multiplier
         
     p_buyer = min(buyer.curr_p,max_p,buyer.cash)
     buyer.curr_p = p_buyer
@@ -13,7 +11,7 @@ def trade(buyer,seller,constrained=False,do_print=False):
     p = np.nan
 
     # a. successful trade
-    if (constrained and seller.stock > 0 and buyer.cash >=) or not constrained:
+    if (constrained and seller.stock > 0 and buyer.cash >= p_seller) or not constrained:
         if p_seller <= p_buyer and not seller.sold and not buyer.bought:
             p = p_seller
             buyer.p_curr_surplus = max_p - p_seller
@@ -30,7 +28,9 @@ def trade(buyer,seller,constrained=False,do_print=False):
                 buyer.cash -= p
                 seller.cash += p
                 seller.stock -= 1
-                buyer.hunger_multiplier = 1
+
+    else:
+        buyer.curr_w += 1
         
     
     if do_print:
@@ -66,6 +66,8 @@ def labor_market(worker,employer,inflation,APL=2,constrained=False,do_print=Fals
                 employer.cash -= w
                 worker.cash += w
                 employer.stock += APL
+    else:
+        employer.curr_p += 1
 
     if do_print:
         if w is not np.nan:

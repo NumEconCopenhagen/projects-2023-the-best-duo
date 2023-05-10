@@ -14,7 +14,6 @@ class agent:
         self.max_p = max_p
         self.curr_p = curr_d_p
         self.p_curr_surplus = 0
-        self.hunger_multiplier = 0
         self.bought = False
 
         # labor market
@@ -88,7 +87,7 @@ class economy_simulation:
 
         # b. simulations
         agents = [agent(i,par.p_dem_func(i+1),par.initial_p,par.rw_sup_func(i+1),par.initial_w) for i in range(par.n_agents)]
-        firms = [firm(i,par.p_sup_func(i+1),par.initial_p,1,par.initial_w) for i in range(par.n_firms)]
+        firms = [firm(i,par.p_sup_func(i+1),par.initial_p,par.rw_sup_func(i+1),par.initial_w) for i in range(par.n_firms)]
         poss_comb = list(itertools.product(agents,firms))
         poss_comb = [list(comb) for comb in poss_comb]
         
@@ -169,7 +168,7 @@ class economy_simulation:
                     
                     if not chosen_buyer.bought:
                         chosen_buyer.curr_p += 1
-                        chosen_buyer.hunger_multiplier += 0.1
+
                     else:
                         chosen_buyer.bought = False
                     if inflation <= chosen_buyer.max_p:
