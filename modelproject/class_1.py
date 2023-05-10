@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import itertools
 
 class agent:
-    def __init__(self, id, max_p, curr_d_p, min_rw, curr_s_w):
+    def __init__(self, id, max_p, curr_d_p, min_rw, curr_s_w,initial_cash=1000):
         # identification
         self.id = id
 
@@ -14,18 +14,22 @@ class agent:
         self.max_p = max_p
         self.curr_p = curr_d_p
         self.p_curr_surplus = 0
+        self.hunger_multiplier = 0
         self.bought = False
 
         # labor market
         self.min_rw = min_rw
         self.curr_w = curr_s_w
-        self.rw_curr_surplus = 0
+        self.rw_curr_surplus = 1
         self.worked = False
+
+        # constraints
+        self.cash = initial_cash
 
 
 
 class firm:
-    def __init__(self, id, min_p, curr_s_p, max_rw, curr_d_w):
+    def __init__(self, id, min_p, curr_s_p, max_rw, curr_d_w,initial_cash=1000):
         # identification
         self.id = id
 
@@ -40,6 +44,10 @@ class firm:
         self.curr_w = curr_d_w
         self.rw_curr_surplus = 0
         self.employed = False
+
+        # constraints
+        self.cash = initial_cash
+        self.stock = 0
 
 class economy_simulation:
 
@@ -72,7 +80,7 @@ class economy_simulation:
         par.rw_sup_func = rw_sup_func
         par.initial_w = initial_w
     
-    def simulate(self):
+    def simulation(self,constrained=False):
 
         # a. setup
         par = self.par
@@ -80,23 +88,33 @@ class economy_simulation:
 
         # b. simulations
         agents = [agent(i,par.p_dem_func(i+1),par.initial_p,par.rw_sup_func(i+1),par.initial_w) for i in range(par.n_agents)]
-        firms = [firm(i,par.p_sup_func(i+1),par.initial_p,par.rw_dem_func(i+1),par.initial_w) for i in range(par.n_firms)]
+        firms = [firm(i,par.p_sup_func(i+1),par.initial_p,1,par.initial_w) for i in range(par.n_firms)]
         poss_comb = list(itertools.product(agents,firms))
         poss_comb = [list(comb) for comb in poss_comb]
+        
+        # accounting
+        inflation_list = []
+        wage_list = []
 
-        iter = 0
         # day simulation
         for day in range(par.n_days):
             print(f'day {day}:')
-            
+            day_w_list = []
             # labor market 
             rand.shuffle(poss_comb)
             for chosen_pair in poss_comb:
-                
                 # were choosing one interaction
                 chosen_worker, chosen_employer = chosen_pair
                 
-                w = labor_market(chosen_worker,chosen_employer,par.n_firms,inflation,do_print=True)
+                w = labor_market(chosen_worker,chosen_employer,inflation,constrained=constrained)
+
+                if str(w) != "nan":
+                    day_w_list.append(w)
+            
+            if day_w_list != []:
+                w = sum(day_w_list)/len(day_w_list)
+            
+            wage_list.append(w)
             
             list_agents = []
             for chosen_pair in poss_comb:
@@ -129,14 +147,15 @@ class economy_simulation:
                 # were choosing one interaction
                 chosen_buyer, chosen_seller = chosen_pair
                 
-                p = trade(chosen_buyer,chosen_seller,par.n_firms)
-
+                p = trade(chosen_buyer,chosen_seller,do_print=True)
+                
                 if str(p) != "nan":
                     p_list.append(p)
             
-            inflation = sum(p_list)/len(p_list)
+            if p_list != []:
+                inflation = sum(p_list)/len(p_list)
 
-            print("today's price:",inflation)
+            print("today's price:",inflation,"Today's wage:",w,"real wage:",w/inflation)
             Demand = 0
             Supply = 0
 
@@ -147,15 +166,18 @@ class economy_simulation:
                 
                 if chosen_buyer not in list_agents:
                     list_agents.append(chosen_buyer)
+                    
                     if not chosen_buyer.bought:
                         chosen_buyer.curr_p += 1
+                        chosen_buyer.hunger_multiplier += 0.1
                     else:
                         chosen_buyer.bought = False
                     if inflation <= chosen_buyer.max_p:
                         Demand += 1
-
+                
                 if chosen_seller not in list_agents:
                     list_agents.append(chosen_seller)
+                    print(chosen_seller.cash)
                     if not chosen_seller.sold:
                         chosen_seller.curr_p -= 1
                     else:
@@ -163,6 +185,11 @@ class economy_simulation:
                     if inflation >= chosen_seller.min_p:
                         Supply += 1
             print(Demand,Supply)
+
+            inflation_list.append(inflation)
+            
+        
+        return inflation_list, wage_list
 
             # take out after
             
