@@ -5,7 +5,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import itertools
 
-class agent:
+class person:
     def __init__(self, id, max_p, curr_d_p, min_rw, curr_s_w):
         # identification
         self.id = id
@@ -43,7 +43,7 @@ class firm:
 
 class economy_simulation:
 
-    def __init__(self, p_dem_func=None, p_sup_func=None,initial_p=None, rw_dem_func=None, rw_sup_func=None, initial_w=None , n_days=30, n_agents=25, n_firms=25,only_goods=False,only_labor=False):
+    def __init__(self, p_dem_func=None, p_sup_func=None,initial_p=None, rw_dem_func=None, rw_sup_func=None, initial_w=None , n_days=30, n_persons=25, n_firms=25,only_goods=False,only_labor=False):
         """Creates an economy simulation
         
         Parameters:
@@ -59,7 +59,7 @@ class economy_simulation:
         
         # a. functional parameters
         par.n_days = n_days
-        par.n_agents = n_agents
+        par.n_persons = n_persons
         par.n_firms = n_firms
 
         # good market parameters
@@ -92,9 +92,9 @@ class economy_simulation:
         inflation = par.initial_p
 
         # b. simulations
-        agents = [agent(i,par.p_dem_func(i+1),par.initial_p,par.rw_sup_func(i+1),par.initial_w) for i in range(par.n_agents)]
+        persons = [person(i,par.p_dem_func(i+1),par.initial_p,par.rw_sup_func(i+1),par.initial_w) for i in range(par.n_persons)]
         firms = [firm(i,par.p_sup_func(i+1),par.initial_p,par.rw_dem_func(i+1),par.initial_w) for i in range(par.n_firms)]
-        poss_comb = list(itertools.product(agents,firms))
+        poss_comb = list(itertools.product(persons,firms))
         poss_comb = [list(comb) for comb in poss_comb]
         
         # accounting
@@ -138,12 +138,12 @@ class economy_simulation:
 
                 wage_list.append(day_w)
                 
-                list_agents = []
+                list_persons = []
                 for chosen_pair in poss_comb:
                     chosen_worker, chosen_employer = chosen_pair
                     
-                    if chosen_worker not in list_agents:
-                        list_agents.append(chosen_worker)
+                    if chosen_worker not in list_persons:
+                        list_persons.append(chosen_worker)
                         if not chosen_worker.worked:
                             chosen_worker.curr_w -= 1
                         else:
@@ -151,8 +151,8 @@ class economy_simulation:
                         if day_w > int(chosen_worker.min_rw*inflation)+1:
                             l_Supply += 1
 
-                    if chosen_employer not in list_agents:
-                        list_agents.append(chosen_employer)
+                    if chosen_employer not in list_persons:
+                        list_persons.append(chosen_employer)
                         if not chosen_employer.employed:
                             chosen_employer.curr_w += 1
                         else:
@@ -188,12 +188,12 @@ class economy_simulation:
                 g_Supply = 0
 
                 # reset
-                list_agents = []
+                list_persons = []
                 for chosen_pair in poss_comb:
                     chosen_buyer, chosen_seller = chosen_pair
                     
-                    if chosen_buyer not in list_agents:
-                        list_agents.append(chosen_buyer)
+                    if chosen_buyer not in list_persons:
+                        list_persons.append(chosen_buyer)
                         
                         if not chosen_buyer.bought:
                             chosen_buyer.curr_p += 1
@@ -203,8 +203,8 @@ class economy_simulation:
                         if inflation < chosen_buyer.max_p:
                             g_Demand += 1
                     
-                    if chosen_seller not in list_agents:
-                        list_agents.append(chosen_seller)
+                    if chosen_seller not in list_persons:
+                        list_persons.append(chosen_seller)
                         if not chosen_seller.sold:
                             chosen_seller.curr_p -= 1
                         else:

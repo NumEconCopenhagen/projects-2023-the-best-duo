@@ -17,7 +17,7 @@ def trade(buyer,seller,do_print=False):
         buyer.p_curr_surplus = max_p - p_seller
         seller.p_curr_surplus = p_seller - min_p
 
-        #i. price adjustments (agent decreases and firm increases)
+        #i. price adjustments (person decreases and firm increases)
         buyer.curr_p -= 1
         seller.curr_p += 1
         buyer.bought = True
@@ -47,7 +47,7 @@ def labor_market(worker,employer,inflation,do_print=False):
         worker.rw_curr_surplus = w - min_rw*inflation
         employer.rw_curr_surplus = max_rw*inflation - w
 
-        #i. wage adjustments (agent increases and firm decreases)
+        #i. wage adjustments (person increases and firm decreases)
         employer.curr_w -= 1
         worker.curr_w += 1
         employer.employed = True
