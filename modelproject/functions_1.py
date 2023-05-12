@@ -160,69 +160,52 @@ def plot_func(p_dem_func=None, p_sup_func=None,initial_p=None, rw_dem_func=None,
     plt.tight_layout()
     plt.show()
 
-def stand_func(x,a,b,n_persons,n_firms,dem=False,sup=False):
+def stand_func(ab, n_persons=None, n_firms=None, dem=False, sup=False):
+    a, b = ab
     
+    if type(n_persons) == int:
+        n = n_persons
+    elif type(n_firms) == int:
+        n = n_firms
+    else:
+        raise KeyError("n_firms or n_persons must contain an intenger")
+
     if dem:
-        assert a < 0 and b > - a
-        fig = plt.figure()
-        ax=fig.subplots(1,1)
-        ax.plot(x,a*x/n_persons + b)
-        ax.set_xlim(0, n_persons)
-        ax.set_ylim(0,100)
-
-        plt.show()
-
+        assert a < 0 and b > -a
         
-
-    
     if sup:
         assert a > 0 and b > 0
-        return a*x*n_firms + b
+
+    def standardized_function(x):
+        return a*x/n + b
+    
+    return standardized_function
+
+def update_x(p_dem,p_sup,l_dem,l_sup,n_persons,n_firms,initial_p, initial_w, n_days):
+    p_dem_func = stand_func(p_dem, n_persons=n_persons, dem=True)
+    p_sup_func = stand_func(p_sup, n_firms=n_firms, sup=True) 
+    l_dem_func = stand_func(l_dem, n_firms=n_firms, dem=True)
+    l_sup_func = stand_func(l_sup, n_persons=n_persons, sup=True)
+
+    plot_func(p_dem_func=p_dem_func, p_sup_func=p_sup_func,initial_p=initial_p, rw_dem_func=l_dem_func, rw_sup_func=l_sup_func, initial_w=initial_w , n_days=n_days, n_persons=n_persons, n_firms=n_firms,only_goods=False,only_labor=False)
 
 
 def interact():
     
-    a_p_dem = widgets.FloatSlider(-50,min=-50,max=-5)
-    b_p_dem = widgets.FloatSlider(55,min=50,max=100)
-    n_persons = widgets.IntSlider(25,1,50)
-    x = widgets.fixed(np.array([i+1 for i in range(n_persons.value)]))
-    n_firms = widgets.IntSlider(25,1,50)
+    p_dem = widgets.Dropdown(options=[("steeper",(-80,90)),("normal",(-50,75)),("flatter",(-20,60))],value=(-50,75))
+    p_sup = widgets.Dropdown(options=[("steeper",(80,10)),("normal",(50,25)),("flatter",(20,40))],value=(50,25))
+    l_dem = widgets.Dropdown(options=[("steeper",(-1.8,1.9)),("normal",(-1,1.5)),("flatter",(-0.2,1.1))],value=(-1,1.5))
+    l_sup = widgets.Dropdown(options=[("steeper",(1.8,0.1)),("normal",(1,0.5)),("flatter",(0.2,0.9))],value=(1,0.5))
+
+    n_persons = widgets.IntSlider(25, 1, 50)
+    n_firms = widgets.IntSlider(25, 1, 50)
+    initial_p = widgets.IntSlider(75, 10, 90)
+    initial_w = widgets.IntSlider(25, 10, 90)
+    n_days = widgets.IntSlider(100, 50, 500, 10)
     
-    def update_x(n_persons):
-        x = widgets.fixed(np.array([i+1 for i in range(n_persons)]))
-    
-    widgets.interact(update_x,n_persons=n_persons)
-    widgets.interact(stand_func,x=x,a=a_p_dem,b=b_p_dem,n_persons=n_persons,n_firms=n_firms,dem=True)
+    widgets.interact(update_x, p_dem=p_dem, p_sup=p_sup, l_dem=l_dem, l_sup=l_sup, n_persons=n_persons, n_firms=n_firms, initial_p=initial_p, initial_w=initial_w, n_days=n_days)
 
 
-
-    
-    # p_dem_funcs = None
-    # def p_dem_func(n_persons):
-    #     p_dem_funcs = widgets.Dropdown(options = [lambda x: 55 - 2*x*25/n_persons.value])
-    
-    # p_dem_func(n_persons.value)
 
     
-
     
-    # p_sup_funcs = widgets.Dropdown(options=[lambda x: 2*x*25/n_firms.value],description="Demand Function")
-    
-
-
-
-    # initial_p = widgets.IntSlider(10,1,25)
-
-    # n_days = widgets.IntSlider(50,10,250,10)
-
-    # only_goods = widgets.fixed(True)
-    # rw_dem_funcs = widgets.fixed(None)
-    # rw_sup_funcs = widgets.fixed(None)
-    # initial_w = widgets.fixed(None)
-    
-
-    
-    # p_dem_func_list = [lambda x: 55 - 2*x*25/n_firms]
-    
-
-    # widgets.interact(plot_func,p_dem_func=p_dem_funcs, p_sup_func=p_sup_funcs,initial_p=initial_p, n_days=n_days, n_persons=n_persons, n_firms=n_firms,only_goods=only_goods,rw_dem_func=rw_dem_funcs,rw_sup_func=rw_sup_funcs,initial_w=initial_w)
