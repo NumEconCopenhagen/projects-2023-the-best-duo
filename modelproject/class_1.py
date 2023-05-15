@@ -1,6 +1,7 @@
 from types import SimpleNamespace
 import random as rand
 from functions_1 import *
+from functions_1 import trade
 import numpy as np
 import matplotlib.pyplot as plt
 import itertools
