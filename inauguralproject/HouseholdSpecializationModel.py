@@ -122,7 +122,7 @@ class HouseholdSpecializationModelClass:
 
          # a. objective function (to minimize) 
         def objective_function(x):
-            return -self.calc_utility(x[0], x[1], x[2], x[3]) 
+            return -self.calc_utility(x[0], x[1], x[2], x[3])
         
         # b. constraints
         cons1 = lambda x: 24 - x[0] - x[1]    #time spent by male can't be above 24
@@ -146,7 +146,7 @@ class HouseholdSpecializationModelClass:
         
         return opt   
 
-    def solve_wF_vec(self,discrete=False):
+    def solve_wF_vec(self,discrete=False,plot=False):
         """ solve model for vector of female wages """
         
         par = self.par
