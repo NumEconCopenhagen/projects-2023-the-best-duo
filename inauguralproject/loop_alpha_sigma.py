@@ -7,7 +7,9 @@ def loop_alpha_sigma(alpha_vec,sigma_vec):
     
     # a. setting parameters
     model = HouseholdSpecializationModelClass()
-    sol_array = np.zeros((len(alpha_vec),len(sigma_vec)))
+    alpha_array = np.empty((len(alpha_vec),len(sigma_vec)))
+    sigma_array = np.empty((len(alpha_vec),len(sigma_vec)))
+    ratio_array = np.empty((len(alpha_vec),len(sigma_vec)))
 
     # b. looping all the values of alpha and sigma
     for alp_i in range(len(alpha_vec)):
@@ -26,3 +28,9 @@ def loop_alpha_sigma(alpha_vec,sigma_vec):
             
             # iii. print out results
             print(f'(\u03B1, \u03C3) : ({alpha_vec[alp_i]:.2f}, {sigma_vec[sig_i]:.2F}) --> ratio ={ratio: .4F}')
+
+            alpha_array[alp_i,sig_i] = alpha_vec[alp_i]
+            sigma_array[alp_i,sig_i] = sigma_vec[sig_i]
+            ratio_array[alp_i,sig_i] = ratio
+    
+    return alpha_array, sigma_array, ratio_array
