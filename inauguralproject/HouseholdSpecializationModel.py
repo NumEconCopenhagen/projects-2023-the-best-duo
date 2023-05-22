@@ -78,7 +78,6 @@ class HouseholdSpecializationModelClass:
     def solve_discrete(self,do_print=False):
         """ solve model discretely """
         
-        par = self.par
         opt = SimpleNamespace()
         
         # a. all possible choices
@@ -116,13 +115,11 @@ class HouseholdSpecializationModelClass:
     def solve(self,do_print=False):
         """ solve model continously """
         
-        par = self.par
-        sol = self.sol
         opt = SimpleNamespace()
 
-         # a. objective function (to minimize) 
+        # a. objective function (to minimize) 
         def objective_function(x):
-            return -self.calc_utility(x[0], x[1], x[2], x[3])
+            return -self.calc_utility(x[0], x[1], x[2], x[3]) * 100 # we made a positive monotone transformation so that the optimization works best
         
         # b. constraints
         cons1 = lambda x: 24 - x[0] - x[1]    #time spent by male can't be above 24
@@ -142,46 +139,58 @@ class HouseholdSpecializationModelClass:
         opt.HM = sol.x[1]
         opt.LF = sol.x[2]
         opt.HF = sol.x[3]
-        opt.u = self.calc_utility(opt.LM,opt.HM,opt.LF,opt.HF)
+        opt.u = self.calc_utility(opt.LM,opt.HM,opt.LF,opt.HF) / 100
         
+        # e. print
+        if do_print:
+            for k,v in opt.__dict__.items():
+                print(f'{k} = {v:6.4f}')
+
         return opt   
 
-    def solve_wF_vec(self,discrete=False,plot=False):
-        """ solve model for vector of female wages """
+    def solve_wF_vec(self,method,plot=False):
+        """
+        Solve model for vector of female wages 
+        
+        Parameters:
+        
+        method: func
+            It is the method that will be applied to solve the problem.
+            It should be "model.solve_discrete" or a "model.solve".
+        plot: Bool
+            If True, then it will create a plot with the ratios of household production and wages.
+        """
         
         par = self.par
         sol = self.sol
         opt = SimpleNamespace()
 
         # a. solve for all wF values
-        if discrete:
-
-            # i. solve when discrete
-            for i, wF in enumerate(par.wF_vec):
-                par.wF = wF
-                
-                opt = self.solve_discrete()
-                sol.LM_vec[i] = opt.LM
-                sol.HM_vec[i] = opt.HM
-                sol.LF_vec[i] = opt.LF
-                sol.HF_vec[i] = opt.HF
-        
-        else:
-
-            # ii. solve when continuous
-            for i, wF in enumerate(par.wF_vec):
-                par.wF = wF
-                
-                opt = self.solve()
-                sol.LM_vec[i] = opt.LM
-                sol.HM_vec[i] = opt.HM
-                sol.LF_vec[i] = opt.LF
-                sol.HF_vec[i] = opt.HF
+        for i, wF in enumerate(par.wF_vec):
+            par.wF = wF
+            
+            opt = method()
+            sol.LM_vec[i] = opt.LM
+            sol.HM_vec[i] = opt.HM
+            sol.LF_vec[i] = opt.LF
+            sol.HF_vec[i] = opt.HF
 
         # b. parameter reset
         par.wF = 1
-        
-        return sol   
+
+        # c. plot
+        if plot:
+            
+            # i. log the ratios
+            logHF_HM = np.log10(sol.HF_vec / sol.HM_vec)
+            logwF_wM = np.log10(par.wF_vec / par.wM_vec)
+
+            # ii. plot 
+            plt.scatter(logwF_wM, logHF_HM)
+            plt.xlabel("log wF/wM",size=15)
+            plt.ylabel("log HF/HM",size=15)
+            plt.title("log HF/HM against log wF/wM")
+            plt.show()   
 
     def run_regression(self):
         """ run regression """
@@ -266,6 +275,46 @@ class HouseholdSpecializationModelClass:
         par.wM = 1
 
         return best_alpha,best_sigma,best_wM
+    
+    def objective_function(self,x):
+        par = self.par
+        sol = self.sol
+        
+        self.par.alpha = x[0]
+        self.par.sigma = x[1]
+        self.solve_wF_vec(self.solve)
+        self.run_regression()
+        error = (par.beta0_target - sol.beta0)**2 + (par.beta1_target - sol.beta1)**2
+        return error * 100
+
+
+    def estimate2(self):
+        par = self.par
+        sol = self.sol
+        opt = SimpleNamespace()
+
+        # a. objective function (to minimize) 
+       
+        
+        # b. constraints
+        bounds = ((0,1), (0,5))
+        
+
+        # c. call solver
+        initial_guess = [0.5, 1]
+        sol = optimize.minimize(self.objective_function,initial_guess,
+                                method='SLSQP',bounds=bounds)
+        
+        # d. save
+        opt.alpha = sol.x[0]
+        opt.sigma = sol.x[1]
+
+        self.par.alpha = opt.alpha
+        self.par.sigma = opt.sigma
+
+        return opt.alpha, opt.sigma
+
+
         
         
 
