@@ -202,6 +202,8 @@ class HouseholdSpecializationModelClass:
         y = np.log10(sol.HF_vec/sol.HM_vec)
         A = np.vstack([np.ones(x.size),x]).T
         sol.beta0,sol.beta1 = np.linalg.lstsq(A,y,rcond=None)[0]
+        
+        return sol
     
     def estimate(self,alpha=None,min_alpha=0,max_alpha=2,sigma=None,min_sigma=0,max_sigma=2,wM=None,min_wM=1,max_wM=3,n=15):
         """ estimate the best alpha, sigma and wM to better fit the reality, with vectors of size n """
@@ -276,25 +278,21 @@ class HouseholdSpecializationModelClass:
 
         return best_alpha,best_sigma,best_wM
     
-    def objective_function(self,x):
-        par = self.par
-        sol = self.sol
-        
-        self.par.alpha = x[0]
-        self.par.sigma = x[1]
-        self.solve_wF_vec(self.solve)
-        self.run_regression()
-        error = (par.beta0_target - sol.beta0)**2 + (par.beta1_target - sol.beta1)**2
-        return error * 100
+    
 
 
     def estimate2(self):
         par = self.par
-        sol = self.sol
         opt = SimpleNamespace()
 
         # a. objective function (to minimize) 
-       
+        def error(x):
+            par.alpha = x[0]
+            par.sigma = x[1]
+            self.solve_wF_vec(self.solve)
+            sol = self.run_regression()
+            error = (par.beta0_target - sol.beta0)**2 + (par.beta1_target - sol.beta1)**2
+            return error * 100
         
         # b. constraints
         bounds = ((0,1), (0,5))
@@ -302,12 +300,12 @@ class HouseholdSpecializationModelClass:
 
         # c. call solver
         initial_guess = [0.5, 1]
-        sol = optimize.minimize(self.objective_function,initial_guess,
-                                method='SLSQP',bounds=bounds)
+        result = optimize.minimize(error,initial_guess,
+                                method='Nelder-Mead',bounds=bounds)
         
         # d. save
-        opt.alpha = sol.x[0]
-        opt.sigma = sol.x[1]
+        opt.alpha = result.x[0]
+        opt.sigma = result.x[1]
 
         self.par.alpha = opt.alpha
         self.par.sigma = opt.sigma
