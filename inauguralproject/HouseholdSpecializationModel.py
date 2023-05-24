@@ -71,7 +71,7 @@ class HouseholdSpecializationModelClass:
         epsilon_ = 1+1/par.epsilon
         TM = LM+HM
         TF = LF+HF
-        disutility = par.nu*(TM**epsilon_/epsilon_+TF**epsilon_/epsilon_)
+        disutility = par.nu*(TM**epsilon_/epsilon_ + TF**epsilon_/epsilon_)
         
         return utility - disutility
 
@@ -204,90 +204,17 @@ class HouseholdSpecializationModelClass:
         sol.beta0,sol.beta1 = np.linalg.lstsq(A,y,rcond=None)[0]
         
         return sol
-    
-    def estimate(self,alpha=None,min_alpha=0,max_alpha=2,sigma=None,min_sigma=0,max_sigma=2,wM=None,min_wM=1,max_wM=3,n=15):
-        """ estimate the best alpha, sigma and wM to better fit the reality, with vectors of size n """
-        
-        par = self.par
-        sol = self.sol
 
-        # a. setting paramenters
-        best_error = np.inf
-        best_alpha = np.nan
-        best_sigma = np.nan
-        best_wM = np.nan
-
-        # b. assigns fixed and variable parameters
-        if alpha == None:
-            alp_vec = np.linspace(min_alpha,max_alpha,n) #alpha is variable if no value is atributted
-        else:
-            alp_vec = [alpha]                             #alpha is fixed if value is atributted
-
-        if sigma == None:
-            sig_vec = np.linspace(min_sigma,max_sigma,n)
-        else:
-            sig_vec = [sigma]
-
-        if wM == None:
-            wM_vec = np.linspace(min_wM,max_wM,15)
-        else:
-            wM_vec = [wM]
-
-        # c. grid search
-        for alp in alp_vec:
-            par.alpha = alp
-            
-            for sig in sig_vec:
-                par.sigma = sig
-
-                for wm in wM_vec:
-                    par.wM = wm
-                    
-                    # i. solve
-                    self.solve_wF_vec()
-                    self.run_regression()
-
-                    # ii. calculate error
-                    error = (par.beta0_target - sol.beta0)**2 + (par.beta1_target - sol.beta1)**2
-
-                    # iii. filter best error
-                    if error < best_error:
-                        best_error = error
-                        best_alpha = alp
-                        best_sigma = sig
-                        best_wM = wm
-        
-        # d. print results
-        result = "The best answer is:"
-
-        if alpha == None:
-            result += f" alpha = {best_alpha},"
-        if sigma == None:
-            result += f" sigma = {best_sigma},"
-        if wM == None:
-            result += f" wM = {best_wM},"
-        
-        result += f" with error = {best_error}."
-
-        print(result)
-        
-        # e. parameter reset
-        par.alpha = 0.5
-        par.sigma = 1
-        par.wM = 1
-
-        return best_alpha,best_sigma,best_wM
-    
-    
-
-
-    def estimate2(self):
+    def estimate(self,alpha=None):
         par = self.par
         opt = SimpleNamespace()
 
         # a. objective function (to minimize) 
         def error(x):
-            par.alpha = x[0]
+            if alpha == None:
+                par.alpha = x[0]
+            else:
+                par.alpha = alpha
             par.sigma = x[1]
             self.solve_wF_vec(self.solve)
             sol = self.run_regression()
@@ -297,20 +224,53 @@ class HouseholdSpecializationModelClass:
         # b. constraints
         bounds = ((0,1), (0,5))
         
-
         # c. call solver
         initial_guess = [0.5, 1]
-        result = optimize.minimize(error,initial_guess,
-                                method='Nelder-Mead',bounds=bounds)
+        result = optimize.minimize(error,initial_guess, method='Nelder-Mead',bounds=bounds)
         
         # d. save
-        opt.alpha = result.x[0]
+        if alpha == None:
+            opt.alpha = result.x[0]
+        else:
+            opt.alpha = alpha
+        
         opt.sigma = result.x[1]
 
-        self.par.alpha = opt.alpha
-        self.par.sigma = opt.sigma
+        par.alpha = opt.alpha
+        par.sigma = opt.sigma
 
-        return opt.alpha, opt.sigma
+        return
+    
+    def estimate_omega(self):
+        par = self.par
+        opt = SimpleNamespace()
+
+        # a. objective function (to minimize) 
+        def error(x):
+            par.sigma = x[0]
+            par.omega = x[1]
+            self.solve_wF_vec(self.solve)
+            sol = self.run_regression()
+            print(par.omega, par.sigma)
+            error = (par.beta0_target - sol.beta0)**2 + (par.beta1_target - sol.beta1)**2
+            return error * 100
+        
+        # b. constraints
+        bounds = ((0,5), (0,1))
+        
+        # c. call solver
+        initial_guess = [1.0, 0.5]
+        result = optimize.minimize(error,initial_guess, method='Nelder-Mead',bounds=bounds)
+        
+        opt.sigma = result.x[0]
+        opt.omega = result.x[1]
+
+        par.sigma = opt.sigma
+        par.omega = opt.omega
+
+        print(opt.sigma, opt.omega)
+
+        return 
 
 
         
