@@ -18,7 +18,8 @@ class HouseholdSpecializationModelClass:
 
         # b. preferences
         par.rho = 2.0
-        par.nu = 0.001
+        par.nuM = 0.001
+        par.nuF = 0.001
         par.epsilon = 1.0
         par.omega = 0.5
 
@@ -71,7 +72,7 @@ class HouseholdSpecializationModelClass:
         epsilon_ = 1+1/par.epsilon
         TM = LM+HM
         TF = LF+HF
-        disutility = par.nu*(TM**epsilon_/epsilon_ + TF**epsilon_/epsilon_)
+        disutility = par.nuM*(TM**epsilon_/epsilon_) + par.nuF*(TF**epsilon_/epsilon_)
         
         return utility - disutility
 
@@ -241,36 +242,37 @@ class HouseholdSpecializationModelClass:
 
         return
     
-    def estimate_omega(self):
+    def estimate_nu(self):
         par = self.par
         opt = SimpleNamespace()
 
         # a. objective function (to minimize) 
         def error(x):
             par.sigma = x[0]
-            par.omega = x[1]
+            par.nuM = x[1]
+            par.nuF = x[2]
             self.solve_wF_vec(self.solve)
             sol = self.run_regression()
-            print(par.omega, par.sigma)
+            
             error = (par.beta0_target - sol.beta0)**2 + (par.beta1_target - sol.beta1)**2
             return error * 100
         
         # b. constraints
-        bounds = ((0,5), (0,1))
+        bounds = ((0,5), (0,1), (0,1))
         
         # c. call solver
-        initial_guess = [1.0, 0.5]
+        initial_guess = [1.0, 0.01, 0.01]
         result = optimize.minimize(error,initial_guess, method='Nelder-Mead',bounds=bounds)
         
         opt.sigma = result.x[0]
-        opt.omega = result.x[1]
+        opt.nuM = result.x[1]
+        opt.nuF = result.x[2]
 
         par.sigma = opt.sigma
-        par.omega = opt.omega
+        par.nuM = opt.nuM
+        par.nuF = opt.nuF
 
-        print(opt.sigma, opt.omega)
-
-        return 
+        return opt.sigma, opt.nuM, opt.nuF
 
 
         
