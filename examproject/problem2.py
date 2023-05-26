@@ -21,6 +21,11 @@ class problem2_model:
         par.kappa_1 = 1.0
         par.T = 120
         par.delta = 0
+        
+        # b. extention parameters
+        par.mu = 0.1
+        par.lam = 2
+
 
     def profit_fun(self,l_t,kappa_t):
         """returns the profit given current labor and kappa"""
@@ -118,11 +123,70 @@ class problem2_model:
         sol = optimize.minimize_scalar(objective_function,bounds=bound,method="bounded")
 
         return sol
-
-
-
-        
-            
-
     
+    # Extension
+    
+    def w_t(self,profit_t_1):
+        """returns the wage at t"""
+        par = self.par
 
+        # a. rewrite par.w
+        par.w = par.w + par.mu*profit_t_1
+        
+        return
+    
+    def ext_profit_fun(self,l_t,kappa_t):
+        """returns the profit given current labor and kappa"""
+        par = self.par
+
+        return kappa_t*par.lam*np.log(par.w)*l_t**(1-par.eta) - par.w*l_t
+    
+    def ext_l_t_fun(self,l_t_1, kappa_t):
+        """returns current labor with last time labor and current kappa"""
+        par = self.par
+        
+        # a. calculate current labor
+        l_t = (((1-par.eta)*kappa_t*par.lam*np.log(par.w))/par.w)**(1/par.eta)
+
+        # b. effectively change it if the change is higher than delta
+        if abs(l_t - l_t_1) > par.delta:
+            return l_t
+        
+        else:
+            return l_t_1
+        
+    def ext_ex_post(self):
+        """returns a value after a shock series"""
+        par = self.par
+        par.w = 1
+        
+        # a. set variables
+        t = 0
+        value = 0
+        l_t_1 = par.l_1
+        k_t_1 = par.kappa_1
+        epsilon = 0 
+        
+        # b. iterate until the end of the time series
+        while t < par.T:
+            
+            # i. calculate the kappa and labour
+            k_t = self.k_t_fun(k_t_1,epsilon)
+            l_t = self.ext_l_t_fun(l_t_1,k_t)
+            
+            value_1 = value
+            # ii. calculate revenue depending if labor changed or not
+            if l_t != l_t_1:
+                value += par.R**(-t)*(self.ext_profit_fun(l_t,k_t)-par.iota)
+
+            else:
+                value += par.R**(-t)*self.ext_profit_fun(l_t,k_t)
+
+            # iii. prepare variables for next iteration
+            self.w_t(value-value_1)
+            t += 1
+            k_t_1 = k_t
+            l_t_1 = l_t
+            epsilon = self.epsilon()
+        
+        return value
