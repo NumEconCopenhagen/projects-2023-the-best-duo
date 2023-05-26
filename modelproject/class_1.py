@@ -1,7 +1,7 @@
 from types import SimpleNamespace
 import random as rand
-from functions_1 import *
-from functions_1 import trade
+import functions_1 as f
+
 import numpy as np
 import matplotlib.pyplot as plt
 import itertools
@@ -155,7 +155,7 @@ class economy_simulation:
                 for chosen_pair in poss_comb:
 
                     chosen_worker, chosen_employer = chosen_pair
-                    inter_w = labor_market(chosen_worker,chosen_employer,inflation)
+                    inter_w = f.labor_market(chosen_worker,chosen_employer,inflation)
 
                     # o. cleaning all the unsuccessful interactions
                     if str(inter_w) != "nan":
@@ -226,7 +226,7 @@ class economy_simulation:
                 for chosen_pair in poss_comb:
                     
                     chosen_buyer, chosen_seller = chosen_pair
-                    p = trade(chosen_buyer,chosen_seller)
+                    p = f.trade(chosen_buyer,chosen_seller)
                     
                     # o. cleaning all the unsuccessful interactions
                     if str(p) != "nan":

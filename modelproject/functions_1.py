@@ -142,7 +142,7 @@ def plot_func(p_dem_func=None, p_sup_func=None,initial_p=None, rw_dem_func=None,
         axs[r,1].plot(range(n_days),l_demand,color="red",alpha=0.7)
         axs[r,1].plot(range(n_days),l_supply,color="darkcyan",alpha=0.7)
         ax = axs[r,0].twinx() 
-        ax.plot(range(n_days),rw,color="darkcyan",alpha=0.7)
+        ax.plot(range(n_days),rw,color="darkcyan",alpha=0.7,linestyle="-.")
         
         # iii. setting tittles
         axs[r,0].set_title("Real and Nominal wage")
